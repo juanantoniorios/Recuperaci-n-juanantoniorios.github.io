@@ -1,0 +1,426 @@
+<!-- TODO EL HTML -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Clases Perdidas - Recuperación</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f0f4f8;
+      margin: 0; padding: 0;
+    }
+    header {
+      background-color: #1565c0;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+    }
+    main {
+      max-width: 700px;
+      margin: 2rem auto;
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    section {
+      margin-bottom: 2rem;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.4rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #0d47a1;
+    }
+    .media-gallery img, .media-gallery video {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .chat-floating {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 350px;
+      height: 450px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 1000;
+    }
+    .chat-header {
+      background-color: #1976d2;
+      color: white;
+      padding: 0.7rem;
+      font-weight: 700;
+      text-align: center;
+      user-select: none;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.8rem;
+      font-size: 0.9rem;
+      background: #f1f7ff;
+    }
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #ddd;
+    }
+    .chat-input input {
+      flex: 1;
+      border: none;
+      padding: 0.8rem;
+      font-size: 1rem;
+      border-radius: 0 0 0 12px;
+      outline: none;
+    }
+    .chat-input button {
+      width: 60px;
+      background-color: #1976d2;
+      border-radius: 0 0 12px 0;
+      font-size: 1.3rem;
+      color: white;
+    }
+    .mensaje {
+      margin-bottom: 0.5rem;
+      background: #e3f2fd;
+      padding: 0.4rem 0.7rem;
+      border-radius: 10px;
+      word-wrap: break-word;
+    }
+    .mensaje strong {
+      color: #0d47a1;
+    }
+    .chat-toggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      user-select: none;
+      z-index: 1100;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Clases Perdidas - Recuperación</h1>
+</header>
+
+<main>
+
+  <!-- Registro e ingreso -->
+  <section id="registerSection">
+    <h2>Regístrate o Ingresa</h2>
+    <label for="nombreInput">Nombre completo:</label>
+    <input id="nombreInput" type="text" placeholder="Tu nombre completo" required />
+    
+    <label for="correoInput">Correo electrónico:</label>
+    <input id="correoInput" type="email" placeholder="Tu correo" required />
+    
+    <label for="passwordInput">Contraseña:</label>
+    <input id="passwordInput" type="password" placeholder="Contraseña" required />
+    
+    <label for="rolInput">¿Eres?</label>
+    <select id="rolInput" required>
+      <option value="estudiante">Estudiante</option>
+      <option value="profesor">Profesor</option>
+    </select>
+    
+    <button id="btnRegister">Ingresar</button>
+  </section>
+
+  <!-- Subir material (solo para profesores) -->
+  <section id="uploadSection" style="display:none;">
+    <h2>Subir material</h2>
+    <input id="mediaInput" type="file" accept="image/*,video/*" multiple />
+    <button id="btnUpload">Subir material</button>
+  </section>
+
+  <!-- Galería para estudiantes -->
+  <section id="gallerySection" style="display:none;">
+    <h2>Material subido por profesores</h2>
+    <div class="media-gallery" id="mediaGallery"></div>
+  </section>
+
+</main>
+
+<!-- Botón para abrir/cerrar chat -->
+<button class="chat-toggle" id="chatToggleBtn">💬</button>
+
+<!-- Chat flotante -->
+<div class="chat-floating" id="chatBox">
+  <div class="chat-header">Chat General</div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input">
+    <input id="chatInput" type="text" placeholder="Escribe un mensaje..." />
+    <button id="btnSendMsg">📩</button>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDK95MUW4aPUDdGobkAKuGs_6yKjdE1Qbw",
+    authDomain: "clases-perdidas.firebaseapp.com",
+    projectId: "clases-perdidas",
+    storageBucket: "clases-perdidas.appspot.com",
+    messagingSenderId: "270558925070",
+    appId: "1:270558925070:web:3eeca4f6044cfec225c75f",
+    measurementId: "G-VR99YHGREZ"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let usuario = null;
+  let rol = null;
+  let correoUsuario = null;
+
+  function guardarSesion(nombre, correo, rol) {
+    localStorage.setItem('usuarioNombre', nombre);
+    localStorage.setItem('usuarioCorreo', correo);
+    localStorage.setItem('usuarioRol', rol);
+  }
+  function cargarSesion() {
+    const nombre = localStorage.getItem('usuarioNombre');
+    const correo = localStorage.getItem('usuarioCorreo');
+    const rolUser = localStorage.getItem('usuarioRol');
+    if (nombre && correo && rolUser) {
+      usuario = nombre;
+      correoUsuario = correo;
+      rol = rolUser;
+      return true;
+    }
+    return false;
+  }
+
+  function mostrarSeccionesPorRol() {
+    document.getElementById('registerSection').style.display = 'none';
+    if (rol === 'profesor') {
+      document.getElementById('uploadSection').style.display = 'block';
+      document.getElementById('gallerySection').style.display = 'block';
+    } else if (rol === 'estudiante') {
+      document.getElementById('uploadSection').style.display = 'none';
+      document.getElementById('gallerySection').style.display = 'block';
+    }
+    cargarGaleria();
+  }
+
+  document.getElementById('btnRegister').addEventListener('click', () => {
+    const nombre = document.getElementById('nombreInput').value.trim();
+    const correo = document.getElementById('correoInput').value.trim();
+    const pass = document.getElementById('passwordInput').value.trim();
+    const rolUser = document.getElementById('rolInput').value;
+
+    if (!nombre || !correo || !pass || !rolUser) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+
+    db.collection('usuarios').doc(correo).set({
+      nombre: nombre,
+      correo: correo,
+      rol: rolUser
+    }).then(() => {
+      usuario = nombre;
+      rol = rolUser;
+      correoUsuario = correo;
+      guardarSesion(nombre, correo, rolUser);
+      mostrarSeccionesPorRol();
+      cargarChat();
+      alert('Bienvenido ' + nombre + '!');
+    });
+  });
+
+  function cargarGaleria() {
+    const galeria = document.getElementById('mediaGallery');
+    galeria.innerHTML = '';
+    db.collection('material').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+      galeria.innerHTML = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const contenedor = document.createElement('div');
+        contenedor.style.position = 'relative';
+        contenedor.style.marginBottom = '1rem';
+
+        if (data.tipo === 'imagen') {
+          const img = document.createElement('img');
+          img.src = data.url;
+          img.alt = data.titulo;
+          contenedor.appendChild(img);
+        } else if (data.tipo === 'video') {
+          const video = document.createElement('video');
+          video.src = data.url;
+          video.controls = true;
+          contenedor.appendChild(video);
+        }
+
+        if (rol === 'profesor') {
+          const botonEliminar = document.createElement('button');
+          botonEliminar.textContent = 'Eliminar';
+          botonEliminar.style.position = 'absolute';
+          botonEliminar.style.top = '8px';
+          botonEliminar.style.right = '8px';
+          botonEliminar.style.background = '#e53935';
+          botonEliminar.style.color = 'white';
+          botonEliminar.style.border = 'none';
+          botonEliminar.style.padding = '5px 10px';
+          botonEliminar.style.borderRadius = '6px';
+          botonEliminar.style.cursor = 'pointer';
+          botonEliminar.onclick = () => {
+            if (confirm('¿Estás seguro de que deseas eliminar este material?')) {
+              db.collection('material').doc(doc.id).delete();
+            }
+          };
+          contenedor.appendChild(botonEliminar);
+        }
+
+        galeria.appendChild(contenedor);
+      });
+    });
+  }
+
+  document.getElementById('btnUpload').addEventListener('click', () => {
+    if (rol !== 'profesor') {
+      alert('Solo los profesores pueden subir material');
+      return;
+    }
+    const files = document.getElementById('mediaInput').files;
+    if (!files.length) {
+      alert('Selecciona archivos para subir');
+      return;
+    }
+    Array.from(files).forEach(file => {
+      subirArchivoImgBB(file)
+        .then(url => {
+          let tipoArchivo = 'imagen';
+          if (file.type.startsWith('video')) tipoArchivo = 'video';
+          db.collection('material').add({
+            url: url,
+            tipo: tipoArchivo,
+            titulo: file.name,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            profesor: usuario
+          }).then(() => {
+            alert(`Archivo "${file.name}" subido con éxito!`);
+            document.getElementById('mediaInput').value = '';
+          });
+        })
+        .catch(err => {
+          console.error('Error subiendo archivo:', err);
+          alert('Error al subir archivo: ' + file.name);
+        });
+    });
+  });
+
+  function subirArchivoImgBB(file) {
+    const apiKey = '62da213c6818fe547a199ccc3b3dcd8a';
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = function() {
+        const base64data = reader.result.split(',')[1];
+        fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+          method: 'POST',
+          body: new URLSearchParams({
+            image: base64data,
+            name: file.name
+          })
+        }).then(response => response.json())
+          .then(data => {
+            if (data.success) resolve(data.data.url);
+            else reject(data.error);
+          }).catch(err => reject(err));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function cargarChat() {
+    db.collection('chatGeneral').orderBy('timestamp').onSnapshot(snapshot => {
+      const chatDiv = document.getElementById('chatMessages');
+      chatDiv.innerHTML = '';
+      snapshot.forEach(doc => {
+        const m = doc.data();
+        const div = document.createElement('div');
+        div.classList.add('mensaje');
+        div.innerHTML = `<strong>${m.usuario}:</strong> ${m.mensaje}`;
+        chatDiv.appendChild(div);
+      });
+      chatDiv.scrollTop = chatDiv.scrollHeight;
+    });
+  }
+
+  document.getElementById('btnSendMsg').addEventListener('click', () => {
+    const mensajeInput = document.getElementById('chatInput');
+    const texto = mensajeInput.value.trim();
+    if (!texto) return;
+    if (!usuario) {
+      alert('Primero ingresa para chatear');
+      return;
+    }
+    db.collection('chatGeneral').add({
+      usuario: usuario,
+      mensaje: texto,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      mensajeInput.value = '';
+    });
+  });
+
+  document.getElementById('chatToggleBtn').addEventListener('click', () => {
+    const chatBox = document.getElementById('chatBox');
+    if (chatBox.style.display === 'flex') {
+      chatBox.style.display = 'none';
+    } else {
+      if (!usuario) {
+        alert('Debes ingresar primero para usar el chat');
+        return;
+      }
+      chatBox.style.display = 'flex';
+      cargarChat();
+    }
+  });
+
+  window.onload = () => {
+    if (cargarSesion()) {
+      mostrarSeccionesPorRol();
+      cargarChat();
+    }
+  };
+</script>
+
+</body>
+</html>
